@@ -1,19 +1,26 @@
 """A web application for tracking projects, students, and student grades."""
 
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, session
 
 import hackbright
 
 app = Flask(__name__)
+
+app.secret_key = "Super Secret Secret Key"
 
 
 @app.route("/student")
 def get_student():
     """Show information about a student."""
 
-    github = request.args.get('github')
+    if session == None:
+        github = request.args.get('github')
+        first, last, github = hackbright.get_student_by_github(github)
 
-    first, last, github = hackbright.get_student_by_github(github)
+    else:
+        github = session["added_student"]['github']
+        first = session["added_student"]['first_name']
+        last = session["added_student"]['last_name']
 
     html = render_template('student_info.html', first=first, last=last, github=github)
 
@@ -36,6 +43,10 @@ def student_add():
     github = request.form.get('github')
 
     hackbright.make_new_student(first_name, last_name, github)
+
+    session["added_student"] = {'first_name': first_name,
+                               'last_name': last_name,
+                               'github': github}
 
     html = render_template('student_add.html', first=first_name, last=last_name, github=github)
 
